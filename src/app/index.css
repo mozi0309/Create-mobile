@@ -1,0 +1,46 @@
+* {
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+body {
+  font-family: "SegoeUI", "Microsoft YaHei", "Hiragino Sans GB";
+  font-size: inherit;
+  /*padding-top: constant(safe-area-inset-top);    为导航栏+状态栏的高度 88px            
+  padding-left: constant(safe-area-inset-left);   如果未竖屏时为0         
+  padding-right: constant(safe-area-inset-right); 如果未竖屏时为0         
+  padding-bottom: constant(safe-area-inset-bottom); 兼容 iOS < 11.2 为底下圆弧的高度 34px 
+  padding-bottom: env(safe-area-inset-bottom); 兼容 iOS >= 11.2 */
+}
+
+input {  
+  border: none;    
+  -webkit-appearance:none;
+  border-radius: 0px;
+} 
+
+input, textarea {
+  -webkit-appearance: none;
+}   
+
+table{   
+  border-collapse:collapse;   
+  border-spacing:0;   
+}
+
+a {
+  color: #999999;
+}
+
+.l {
+  float: left;
+}
+
+.r {
+  float: right;
+}
+
+img {
+  border: 0；
+}

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Create-mobile</title>
+  <!-- 手机端控制台 -->
+  <!-- <script src="//cdn.jsdelivr.net/npm/eruda"></script> 
+  <script>eruda.init();</script> -->
+  <style>
+    /* 针对iPhoneX底部 */
+    body {
+      padding-top: constant(safe-area-inset-top);   /* 为导航栏+状态栏的高度 88px  */          
+      padding-left: constant(safe-area-inset-left);   /* 如果未竖屏时为0 */           
+      padding-right: constant(safe-area-inset-right); /* 如果未竖屏时为0 */              
+      padding-bottom: constant(safe-area-inset-bottom); /* 兼容 iOS < 11.2 为底下圆弧的高度 34px  */
+      padding-bottom: env(safe-area-inset-bottom); /* 兼容 iOS >= 11.2 */
+    }
+  </style>
+  <script>
+    // 针对正式服防止操控控制台代码
+    if (window.location.host === 'xxx.com') { // 正式服地址
+      var check = (function () {
+        var callbacks = [], timeLimit = 50, open = false;
+        setInterval(loop, 1);
+        return {
+          addListener: function (fn) {
+            callbacks.push(fn);
+          },
+          cancelListener: function (fn) {
+            callbacks = callbacks.filter(function (v) {
+              return v !== fn;
+            })
+          }
+        }
+        function loop () {
+          var startTime = new Date();
+          debugger;
+          if (new Date() - startTime > timeLimit) {
+            if (!open) {
+              callbacks.forEach(function (fn) {
+                fn.call(null);
+              })
+            }
+            open = true;
+            window.stop();
+            alert('nice try');
+          } else {
+            open = false;
+          }
+        }
+      })();
+
+      check.addListener(function () {
+        window.location.reload();
+      })  
+    }
+  </script>
+  <!-- <script>
+    // 针对移动端响应式大小调整
+    function update(){
+      var a = document.documentElement.offsetWidth || document.body.offsetWidth;
+      var b = document.getElementsByTagName('html')[0];
+      var fontSize = (16 * (a / 720) / (375/720)) + 'px';
+      b.style.fontSize = fontSize; 
+    }
+    update();
+    window.onresize=update;
+    
+    function GetApiHref () {
+		  var ua = navigator.userAgent.toLowerCase()
+		  if (ua.indexOf('haiwangapp') !== -1) {
+		    return 'xxx.com'; // 正式服地址
+		  } else {
+		    return 'xxx.com';// 测试服地址
+		  }
+		  
+    }
+    
+   
+    window.Judge = false; // 当前运行环境变量
+    if(location.protocol=='file:'){
+    	  window.Judge = true
+    }
+    var wgtVer = null;
+    document.addEventListener('plusready', function () {
+      console.log('plusready is running')
+       // 获取本地应用资源版本号
+	    plus.runtime.getProperty(plus.runtime.appid,function(inf){
+	        wgtVer=inf.version;
+	    });
+
+      backButton();
+      getNewVersion();
+    }, false);
+
+    // 判断版本号方法
+    function compare (curV, reqV) {
+      console.log('进入判断版本号方法')
+      if(curV && reqV){
+        console.log (curV,reqV)
+
+          //将两个版本号拆成数字
+        var arr1 = curV.split('.'),
+          arr2 = reqV.split('.');
+          if (parseInt(arr1[1]) > parseInt(arr2[1]) || parseInt(arr1[0]) > parseInt(arr2[0])) {
+          return 'new'
+        } else if ((parseInt(arr1[2]) > parseInt(arr2[2]) || arr2[2] === null) && parseInt(arr1[2]) !== 0) {
+          return 'wgt'
+        } else {
+          return 'no'
+        }
+      }
+    }
+
+    // 判断返回键方法
+    function backButton () {
+      plus.key.addEventListener('backbutton',function () {
+        if ('Android' == plus.os.name) {
+          if (location.hash != '#/') {
+            if(plus.webview.currentWebview().opener()){
+            		plus.webview.currentWebview().canBack(function (e) {
+            			if (e.canBack) {
+            				plus.webview.currentWebview().back()
+            			} else {
+            				plus.webview.currentWebview().close() // hide,quit
+            				// plus.runtime.quit()
+            			}
+            		})
+            }else{
+            	window.history.back();
+            }
+          } else {
+            plus.nativeUI.confirm('确认退出？', function (e) {
+              if (e.index > 0) {
+                plus.runtime.quit();
+              }
+            }, '', ['取消','确定']);
+          }
+        } else {
+          if (location.hash != '#/') {
+            window.history.back();
+          } else {
+            if (confirm('确认退出？')) {
+              plus.runtime.quit();
+            }
+          }
+        }
+      },false);
+    }
+
+    // 获取最新版本号方法
+    function getNewVersion () {
+      var checkURL = GetApiHref()+'xxx/xxx' // 接口地址
+      var versionType = ''
+      if ('Android' == plus.os.name) {
+        versionType = 'andriod'
+      } else {
+        versionType = 'ios'
+      }
+      console.log(checkURL)
+      plus.nativeUI.showWaiting('检测更新...');
+      var xhr = new XMLHttpRequest(); // 定义ajax请求
+      xhr.onreadystatechange = function () {
+        switch (xhr.readyState) {
+          case 4:
+            
+            if (xhr.status == 200) {
+              console.log('检测更新成功：' + xhr.responseText);
+              var newVer = JSON.parse(xhr.responseText);
+              var curV = newVer.message.version
+              console.info(wgtVer+'<'+newVer.message.version);
+              if(newVer.status=='success'){
+	              if (compare(curV, wgtVer) === 'new') {
+                  console.log('new')
+	              	if ('Android' == plus.os.name) {
+	              		  plus.nativeUI.closeWaiting();
+					            plus.nativeUI.confirm('检测到有新的版本,是否更新？', function (e) {
+					              if (e.index > 0) {
+					                downLoad(); // 下载升级包
+					              }else{
+					              	plus.runtime.quit();
+					              }
+					            }, '', ['取消','确定']);
+					          
+					        } else {
+                    if (confirm('检测到有新的版本,是否更新？')) {
+                      downLoad(); // 下载升级包
+                    }
+					        }
+                } else if (compare(curV, wgtVer) === 'wgt') {
+                  console.log('wgt')
+                  if ('Android' == plus.os.name) {
+	              		  plus.nativeUI.closeWaiting();
+					            plus.nativeUI.confirm('检测到有更新,是否更新？', function (e) {
+					              if (e.index > 0) {
+					                downWgt(); // 下载更新包
+					              }else{
+					              	plus.runtime.quit();
+					              }
+					            }, '', ['取消','确定']);
+					          
+					        } else {
+                    if (confirm('检测到有更新,是否更新？')) {
+                      downWgt(); // 下载更新包
+                    }
+					        }
+                } else{
+	              	plus.nativeUI.closeWaiting();
+	              }
+              }
+            } else {
+              console.log('检测更新失败！');
+              plus.nativeUI.closeWaiting();
+              plus.nativeUI.showWaiting('检测更新失败！');
+            }
+            break;
+          default:
+            break;
+        }
+      }
+      xhr.open('POST', checkURL);
+      xhr.setRequestHeader(
+        'Content-Type', 'application/x-www-form-urlencoded'
+      );
+      xhr.withCredentials = true; 
+      
+      xhr.send('app_type=' + versionType);
+    }
+
+    // 下载补丁包方法
+    function downWgt () {
+      var wgtURL = GetApiHref()+'xxx/xxx' // 接口地址
+      var downloadWgtURL='';
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState==4) {
+          var  response=JSON.parse(xhr.responseText);
+          if(response.status=='success'){
+            downloadWgtURL = response.message.wgt
+            console.log(downloadWgtURL)
+            if(window.Judge){
+              plus.nativeUI.closeWaiting();
+              plus.nativeUI.showWaiting('正在下载...');
+              var downWgt = plus.downloader.createDownload(downloadWgtURL, {filename: '_doc/update/'}, function (d,status) {
+                console.log(status)
+                if (status == 200) {
+                console.log('下载成功：' + d.filename);
+                installWgt(d.filename); // 安装wgt包
+                } else {
+                  console.log('下载失败！');
+                  plus.nativeUI.closeWaiting();
+                  plus.nativeUI.showWaiting('下载失败！');    
+                }
+              })
+              downWgt.start();
+              downWgt.addEventListener('statechanged', function() {
+                var passes=Math.round(downWgt.downloadedSize*300/downWgt.totalSize)/300;
+                // var num = Math.round((downWgt.downloadedSize / downWgt.totalSize) * 100); 
+                switch(passes) {
+                  case 0.01:
+                    plus.nativeUI.closeWaiting()
+                    plus.nativeUI.showWaiting("开始下载");
+                    break;
+                  case 0.1:
+                    plus.nativeUI.closeWaiting()
+                    plus.nativeUI.showWaiting("下载中...10%");
+                    break;
+                  case 0.5:  
+                    plus.nativeUI.closeWaiting()
+                    plus.nativeUI.showWaiting("下载中...50%");  
+                    break;  
+                  case 0.7:  
+                    plus.nativeUI.closeWaiting()
+                    plus.nativeUI.showWaiting("下载中...70%");  
+                    break;  
+                  case 0.9:  
+                    plus.nativeUI.closeWaiting()
+                    plus.nativeUI.showWaiting("下载中...90%");  
+                    break;                   
+                  case 1:  
+                    plus.nativeUI.closeWaiting()
+                    plus.nativeUI.showWaiting("下载完成100%");  
+                    break;
+                }
+              } ,false)
+            }
+          }else{
+            plus.nativeUI.closeWaiting();
+            plus.nativeUI.showWaiting('下载失败！');
+          }
+        }
+        }
+      xhr.open('POST', wgtURL);
+      xhr.setRequestHeader(
+        'Content-Type', 'application/x-www-form-urlencoded'
+      );
+      xhr.withCredentials = true; 
+      xhr.send();
+    }
+
+    // 更新补丁包方法
+    function installWgt(path){  
+      plus.nativeUI.showWaiting("安装更新包...");  
+      plus.runtime.install(path,{},function(){  
+        plus.nativeUI.closeWaiting();  
+        console.log("安装wgt文件成功！");  
+        plus.nativeUI.alert("应用资源更新完成！",function(){  
+          plus.runtime.restart();  
+        });  
+      },function(e){  
+        plus.nativeUI.closeWaiting();  
+        console.log("安装wgt文件失败");  
+        plus.nativeUI.alert("安装wgt文件失败");  
+      });  
+    } 
+
+    // 下载最新包方法
+    function downLoad () {
+      
+      var wgtURL = GetApiHref()+'xxx/xxx' // 接口地址
+      var downloadURL='';
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState==4) {
+          var  response=JSON.parse(xhr.responseText);
+          if(response.status=='success'){
+            if ('Android' == plus.os.name) {
+              downloadURL = response.message.andriod
+              if(window.Judge){
+              	plus.nativeUI.closeWaiting();
+              	plus.nativeUI.showWaiting('准备下载...');
+	              var downdown = plus.downloader.createDownload(downloadURL, {filename: '_doc/update/'}, function (d,status) {
+	                console.log(status)
+	                if (status == 200) {
+	                  console.log('下载成功：' + d.filename);
+	                  install(d.filename); // 安装wgt包
+	                } else {
+	                  console.log('下载失败！');
+	                  plus.nativeUI.closeWaiting();
+	                  plus.nativeUI.showWaiting('下载失败！');
+	                  
+	                }
+	              })
+								downdown.start();
+								downdown.addEventListener('statechanged', function() {
+									var passF=Math.round(downdown.downloadedSize*300/downdown.totalSize)/300;
+									// var num = Math.round((downdown.downloadedSize / downdown.totalSize) * 100); 
+									switch(passF) {
+										case 0.01:
+											plus.nativeUI.closeWaiting()
+											plus.nativeUI.showWaiting("开始下载");
+											break;
+										case 0.1:
+											plus.nativeUI.closeWaiting()
+											plus.nativeUI.showWaiting("下载中...10%");
+											break;
+										case 0.5:  
+											plus.nativeUI.closeWaiting()
+											plus.nativeUI.showWaiting("下载中...50%");  
+											break;  
+										case 0.7:  
+											plus.nativeUI.closeWaiting()
+											plus.nativeUI.showWaiting("下载中...70%");  
+											break;  
+										case 0.9:  
+											plus.nativeUI.closeWaiting()
+											plus.nativeUI.showWaiting("下载中...90%");  
+											break;                   
+										case 1:  
+											plus.nativeUI.closeWaiting()
+											plus.nativeUI.showWaiting("下载完成100%");  
+											break;
+									}
+								} ,false)
+	            }
+            } else {
+              downloadURL = response.message.ios
+              console.log(downloadURL);
+              plus.nativeUI.closeWaiting();
+              plus.nativeUI.showWaiting('正在安装...');
+              location.href=downloadURL
+              
+              
+            }
+            console.info(downloadURL)
+          }else{
+          	  plus.nativeUI.closeWaiting();
+              plus.nativeUI.showWaiting('下载失败！');
+          }
+	      }
+	    }
+	      xhr.open('POST', wgtURL);
+	      xhr.setRequestHeader(
+	        'Content-Type', 'application/x-www-form-urlencoded'
+	      );
+	      xhr.withCredentials = true; 
+        xhr.send();
+    }
+    
+    function install(file){
+    	 plus.runtime.install(file);  
+    }
+  </script> -->
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
