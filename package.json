@@ -14,7 +14,7 @@
     "normalize.css": "^8.0.1",
     "prop-types": "^15.6.2",
     "qrcode.react": "^0.9.0",
-    "qs": "^6.6.0",
+    "qs": "^6.6.1",
     "rc-animate": "^2.6.0",
     "react": "^16.8.4",
     "react-animated-router": "^0.1.12",
